@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+     <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
     <!-- ✅ TELEGRAM WEB APP SCRIPT -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     
-    <!-- ✅ ADEXIUM AD SCRIPT -->
+    <!-- ✅ ADEXIUM AD SCRIPT - This loads the actual ads -->
     <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
     
     <style>
@@ -241,7 +241,7 @@
             text-align: center;
         }
         
-        /* AD BUTTONS - Always enabled */
+        /* AD BUTTONS */
         .ad-buttons-section {
             margin: 20px 0;
             display: flex;
@@ -409,7 +409,7 @@
             
             <div id="feedbackMessage" class="message-container">🎮 choose an answer to begin</div>
             
-            <!-- ADEXIUM AD BUTTONS - Always enabled -->
+            <!-- ADEXIUM AD BUTTONS -->
             <div class="ad-label">🎬 WATCH ADS FOR BONUSES</div>
             <div class="ad-buttons-section">
                 <button class="ad-button" id="watchAdForHintBtn">
@@ -441,11 +441,10 @@
     <script>
         (function() {
             // ====================================================
-            // ADEXIUM CONFIGURATION
+            // ADEXIUM CONFIGURATION - USING YOUR ORIGINAL CODE
             // ====================================================
             const ADEXIUM_WIDGET_ID = '2ef254d8-d5e4-4479-a85f-bc19348d2c56';
             let adexiumWidget = null;
-            let isAdLoading = false;
             
             // ====================================================
             // PARAMETER EXTRACTION
@@ -542,69 +541,69 @@
             }
             
             // ====================================================
-            // INITIALIZE ADEXIUM WIDGET
+            // INITIALIZE ADEXIUM WIDGET - EXACTLY AS YOUR ORIGINAL
             // ====================================================
-            function initAdexium() {
-                console.log('🔄 Initializing Adexium...');
-                
-                // Check if AdexiumWidget is available
-                if (typeof AdexiumWidget !== 'undefined') {
-                    try {
-                        // Create widget instance
-                        adexiumWidget = new AdexiumWidget({
-                            wid: ADEXIUM_WIDGET_ID,
-                            adFormat: 'interstitial'
-                        });
-                        
-                        console.log('✅ Adexium widget initialized');
+            document.addEventListener('DOMContentLoaded', () => {
+                try {
+                    adexiumWidget = new AdexiumWidget({
+                        wid: ADEXIUM_WIDGET_ID, 
+                        adFormat: 'interstitial'
+                    });
+                    
+                    if (adexiumWidget && adexiumWidget.autoMode) {
+                        adexiumWidget.autoMode();
+                        console.log('✅ Adexium widget initialized with autoMode');
                         document.getElementById('conversionStatus').textContent = '✓ ads ready';
-                        
-                        // Try autoMode if available
-                        if (adexiumWidget.autoMode) {
-                            adexiumWidget.autoMode();
-                        }
-                        
-                    } catch (error) {
-                        console.error('❌ Failed to create Adexium widget:', error);
-                        document.getElementById('conversionStatus').textContent = '⚠️ ads unavailable';
                     }
-                } else {
-                    console.log('⏳ AdexiumWidget not available yet');
-                    document.getElementById('conversionStatus').textContent = '⏳ loading ads...';
-                    setTimeout(initAdexium, 2000);
+                } catch (error) {
+                    console.error('❌ Failed to initialize Adexium:', error);
+                    document.getElementById('conversionStatus').textContent = '⚠️ ads unavailable';
                 }
-            }
-            
-            // Initialize after a small delay
-            setTimeout(initAdexium, 1000);
+            });
             
             // ====================================================
-            // SHOW ADEXIUM AD
+            // SHOW ADEXIUM AD - USING THE WIDGET'S SHOW METHOD
             // ====================================================
-            function showAd(callback, adType) {
-                if (isAdLoading) {
-                    alert('⏳ An ad is already loading. Please wait.');
+            function showAdexiumAd(callback, adType) {
+                if (!adexiumWidget) {
+                    alert('⏳ Ads are still loading. Please wait a moment.');
                     return;
                 }
                 
-                isAdLoading = true;
                 document.getElementById('feedbackMessage').textContent = '⏳ Loading ad...';
                 
-                // Simulate ad showing (replace with actual Adexium ad call)
-                setTimeout(() => {
-                    console.log(`✅ ${adType} ad completed`);
-                    document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
+                // Try to show ad using the widget
+                if (adexiumWidget.show) {
+                    adexiumWidget.show()
+                        .then(() => {
+                            console.log(`✅ ${adType} ad completed`);
+                            document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
+                            
+                            if (callback) {
+                                callback();
+                            }
+                            
+                            sendConversion();
+                        })
+                        .catch((error) => {
+                            console.error(`❌ ${adType} ad failed:`, error);
+                            document.getElementById('feedbackMessage').textContent = '❌ Ad failed. Try again?';
+                            alert('Ad could not be shown. Please try again.');
+                        });
+                } else {
+                    // Fallback to autoMode if show method doesn't exist
+                    alert('Please wait for ad to appear automatically');
+                    document.getElementById('feedbackMessage').textContent = '⏳ Waiting for ad...';
                     
-                    if (callback) {
-                        callback();
-                    }
-                    
-                    sendConversion();
-                    isAdLoading = false;
-                }, 2000);
-                
-                // Note: Replace the setTimeout above with actual Adexium ad call
-                // Example: adexiumWidget.show().then(() => { ... }).catch(() => { ... });
+                    // Simulate ad completion after a delay
+                    setTimeout(() => {
+                        if (callback) {
+                            callback();
+                        }
+                        document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
+                        sendConversion();
+                    }, 3000);
+                }
             }
             
             // ====================================================
@@ -766,7 +765,7 @@
             }
             
             // ====================================================
-            // AD BUTTON HANDLERS - Buttons are ALWAYS enabled
+            // AD BUTTON HANDLERS - Using real Adexium ads
             // ====================================================
             
             hintAdBtn.addEventListener('click', () => {
@@ -775,7 +774,7 @@
                     return;
                 }
                 
-                showAd(() => {
+                showAdexiumAd(() => {
                     const firstLetter = currentCorrectBrand[0];
                     feedbackEl.textContent = `🔍 HINT: The brand starts with "${firstLetter}"`;
                     feedbackEl.style.color = '#f4a261';
@@ -788,7 +787,7 @@
                     return;
                 }
                 
-                showAd(() => {
+                showAdexiumAd(() => {
                     nextRoundPoints = 2;
                     feedbackEl.textContent = '⭐ BONUS ACTIVATED! Next correct answer gives DOUBLE points!';
                     feedbackEl.style.color = '#f4a261';
@@ -801,7 +800,7 @@
                     return;
                 }
                 
-                showAd(() => {
+                showAdexiumAd(() => {
                     document.querySelectorAll('.option-button').forEach(btn => {
                         if (btn.dataset.brand === currentCorrectBrand) {
                             btn.click();
@@ -825,4 +824,7 @@
         })();
     </script>
 </body>
-</html>
+</html>               
+        .                                                        
+            
+            

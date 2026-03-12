@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brand Trivia · Telegram Mini App</title>
+    
+    <!-- ✅ TELEGRAM WEB APP SCRIPT -->
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    
+    <!-- ✅ ADEXIUM AD SCRIPT -->
+    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -234,6 +241,43 @@
             text-align: center;
         }
         
+        /* AD BUTTONS - Always enabled */
+        .ad-buttons-section {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .ad-button {
+            background: linear-gradient(145deg, #f4a261, #e76f51);
+            border: none;
+            padding: 16px 20px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #b96f2e;
+            transition: all 0.08s linear;
+            border: 1px solid #ffb085;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        .ad-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #b96f2e;
+        }
+        
+        .ad-button i {
+            font-style: normal;
+            font-size: 20px;
+        }
+        
         .button-group {
             display: flex;
             gap: 12px;
@@ -303,7 +347,6 @@
             border-radius: 4px;
             font-family: monospace;
             color: #8aacff;
-            word-break: break-all;
         }
         
         .status-note {
@@ -320,6 +363,15 @@
         
         .privacy-link:hover {
             text-decoration: underline;
+        }
+        
+        .ad-label {
+            font-size: 12px;
+            text-align: center;
+            margin: 10px 0 5px;
+            color: #f4a261;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -357,6 +409,20 @@
             
             <div id="feedbackMessage" class="message-container">🎮 choose an answer to begin</div>
             
+            <!-- ADEXIUM AD BUTTONS - Always enabled -->
+            <div class="ad-label">🎬 WATCH ADS FOR BONUSES</div>
+            <div class="ad-buttons-section">
+                <button class="ad-button" id="watchAdForHintBtn">
+                    <i>🔍</i> Watch Ad to Reveal First Letter
+                </button>
+                <button class="ad-button" id="watchAdForBonusBtn">
+                    <i>⭐</i> Watch Ad to Double Points
+                </button>
+                <button class="ad-button" id="watchAdForSkipBtn">
+                    <i>🔄</i> Watch Ad to Skip This Question
+                </button>
+            </div>
+            
             <div class="button-group">
                 <button class="primary-action" id="nextButton" disabled>next round</button>
                 <button class="secondary-action" id="restartButton">new game</button>
@@ -372,20 +438,23 @@
         <div id="conversionStatus" class="status-note"></div>
     </div>
     
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
     <script>
         (function() {
-            // ---------- PARAMETER EXTRACTION (for any ad network) ----------
-            // Expected format: ?startapp=CAMPAIGN_ID or ?startapp=click_ID
-            // Can be customized for any network
+            // ====================================================
+            // ADEXIUM CONFIGURATION
+            // ====================================================
+            const ADEXIUM_WIDGET_ID = '2ef254d8-d5e4-4479-a85f-bc19348d2c56';
+            let adexiumWidget = null;
+            let isAdLoading = false;
             
+            // ====================================================
+            // PARAMETER EXTRACTION
+            // ====================================================
             let trackingParam = null;
             let conversionSent = false;
             
             function extractTrackingParameter() {
                 try {
-                    // Check Telegram WebApp data (standard for Mini Apps)
                     if (window.Telegram?.WebApp?.initDataUnsafe?.start_param) {
                         const startParam = window.Telegram.WebApp.initDataUnsafe.start_param;
                         console.log('Telegram start_param:', startParam);
@@ -396,7 +465,6 @@
                         }
                     }
                     
-                    // Check URL parameters
                     const urlParams = new URLSearchParams(window.location.search);
                     const tgWebAppData = urlParams.get('tgWebAppData');
                     
@@ -410,22 +478,14 @@
                         }
                     }
                     
-                    // Check hash
-                    if (window.location.hash && window.location.hash.length > 1) {
-                        trackingParam = window.location.hash.substring(1);
-                        return;
-                    }
-                    
                     console.log('No tracking parameter found - running in test mode');
                 } catch (e) {
                     console.error('Error extracting parameter:', e);
                 }
             }
             
-            // Extract tracking parameter
             extractTrackingParameter();
             
-            // Display parameter in footer
             const paramDisplay = document.getElementById('paramDisplay');
             if (paramDisplay) {
                 if (trackingParam) {
@@ -438,7 +498,9 @@
                 }
             }
             
-            // ---------- CONVERSION TRACKING (customize for your network) ----------
+            // ====================================================
+            // ADEXIUM CONVERSION TRACKING
+            // ====================================================
             function sendConversion() {
                 if (!trackingParam) {
                     console.log('No tracking parameter - test mode');
@@ -451,24 +513,12 @@
                     return false;
                 }
                 
-                // ===== CUSTOMIZE THIS URL FOR YOUR AD NETWORK =====
-                // Replace with your actual conversion endpoint
-                // Examples:
-                // - https://go.yournetwork.com/conversion?click_id=PARAM
-                // - https://api.tracking.com/convert?clickid=PARAM
-                // - https://yourdomain.com/track?param=PARAM
+                const conversionUrl = `https://adexium.io/conversion?click_id=${encodeURIComponent(trackingParam)}`;
                 
-                const conversionUrl = `https://your-conversion-endpoint.com/convert?click_id=${encodeURIComponent(trackingParam)}`;
-                
-                // For testing/demo purposes - remove in production
-                console.log('Would send conversion to:', conversionUrl);
-                
-                // Uncomment for actual implementation:
-                /*
                 if (navigator.sendBeacon) {
                     const success = navigator.sendBeacon(conversionUrl);
                     if (success) {
-                        console.log('Conversion sent via sendBeacon');
+                        console.log('✅ Adexium conversion sent');
                         conversionSent = true;
                         document.getElementById('conversionStatus').textContent = '✓ conversion sent';
                         return true;
@@ -480,23 +530,86 @@
                     mode: 'no-cors',
                     keepalive: true
                 }).then(() => {
-                    console.log('Conversion sent via fetch');
+                    console.log('✅ Adexium conversion sent');
                     conversionSent = true;
                     document.getElementById('conversionStatus').textContent = '✓ conversion sent';
                 }).catch(err => {
-                    console.error('Failed to send conversion:', err);
+                    console.error('❌ Failed to send conversion:', err);
                     document.getElementById('conversionStatus').textContent = '✗ conversion failed';
                 });
-                */
-                
-                // Demo mode - simulate success
-                document.getElementById('conversionStatus').textContent = '✓ conversion ready (demo)';
-                conversionSent = true;
                 
                 return true;
             }
             
-            // ---------- GAME DATA ----------
+            // ====================================================
+            // INITIALIZE ADEXIUM WIDGET
+            // ====================================================
+            function initAdexium() {
+                console.log('🔄 Initializing Adexium...');
+                
+                // Check if AdexiumWidget is available
+                if (typeof AdexiumWidget !== 'undefined') {
+                    try {
+                        // Create widget instance
+                        adexiumWidget = new AdexiumWidget({
+                            wid: ADEXIUM_WIDGET_ID,
+                            adFormat: 'interstitial'
+                        });
+                        
+                        console.log('✅ Adexium widget initialized');
+                        document.getElementById('conversionStatus').textContent = '✓ ads ready';
+                        
+                        // Try autoMode if available
+                        if (adexiumWidget.autoMode) {
+                            adexiumWidget.autoMode();
+                        }
+                        
+                    } catch (error) {
+                        console.error('❌ Failed to create Adexium widget:', error);
+                        document.getElementById('conversionStatus').textContent = '⚠️ ads unavailable';
+                    }
+                } else {
+                    console.log('⏳ AdexiumWidget not available yet');
+                    document.getElementById('conversionStatus').textContent = '⏳ loading ads...';
+                    setTimeout(initAdexium, 2000);
+                }
+            }
+            
+            // Initialize after a small delay
+            setTimeout(initAdexium, 1000);
+            
+            // ====================================================
+            // SHOW ADEXIUM AD
+            // ====================================================
+            function showAd(callback, adType) {
+                if (isAdLoading) {
+                    alert('⏳ An ad is already loading. Please wait.');
+                    return;
+                }
+                
+                isAdLoading = true;
+                document.getElementById('feedbackMessage').textContent = '⏳ Loading ad...';
+                
+                // Simulate ad showing (replace with actual Adexium ad call)
+                setTimeout(() => {
+                    console.log(`✅ ${adType} ad completed`);
+                    document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
+                    
+                    if (callback) {
+                        callback();
+                    }
+                    
+                    sendConversion();
+                    isAdLoading = false;
+                }, 2000);
+                
+                // Note: Replace the setTimeout above with actual Adexium ad call
+                // Example: adexiumWidget.show().then(() => { ... }).catch(() => { ... });
+            }
+            
+            // ====================================================
+            // GAME DATA
+            // ====================================================
             const quizData = [
                 { brand: "Nike", slogan: "Just Do It", options: ["Nike", "Adidas", "Puma", "Reebok"] },
                 { brand: "Apple", slogan: "Think Different", options: ["Apple", "Microsoft", "Google", "Samsung"] },
@@ -513,6 +626,8 @@
             let playerScore = 0;
             let roundAnswered = false;
             let gameFinished = false;
+            let currentCorrectBrand = "";
+            let nextRoundPoints = 1;
             
             // DOM elements
             const sloganEl = document.getElementById('sloganDisplay');
@@ -523,9 +638,12 @@
             const roundEl = document.getElementById('roundValue');
             const nextBtn = document.getElementById('nextButton');
             const restartBtn = document.getElementById('restartButton');
-            const statusEl = document.getElementById('conversionStatus');
             
-            // Utility: shuffle array
+            // Ad buttons
+            const hintAdBtn = document.getElementById('watchAdForHintBtn');
+            const bonusAdBtn = document.getElementById('watchAdForBonusBtn');
+            const skipAdBtn = document.getElementById('watchAdForSkipBtn');
+            
             function shuffleArray(array) {
                 for (let i = array.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -534,10 +652,8 @@
                 return array;
             }
             
-            // Load a specific round
             function loadRound(index) {
                 if (index >= quizData.length) {
-                    // Game completed
                     gameFinished = true;
                     sloganEl.textContent = "🎉 GAME COMPLETE!";
                     hintEl.textContent = `final score: ${playerScore}/${quizData.length}`;
@@ -552,7 +668,6 @@
                     
                     nextBtn.disabled = true;
                     
-                    // Send conversion on game completion (target action)
                     if (!conversionSent) {
                         sendConversion();
                     }
@@ -561,31 +676,28 @@
                 }
                 
                 const currentQuiz = quizData[index];
+                currentCorrectBrand = currentQuiz.brand;
                 sloganEl.textContent = `"${currentQuiz.slogan}"`;
                 hintEl.textContent = 'select the brand that uses this slogan';
                 roundEl.textContent = `${index + 1}/${quizData.length}`;
                 
-                // Shuffle options
                 const shuffledOptions = shuffleArray([...currentQuiz.options]);
                 
-                // Create buttons
                 let htmlString = '';
                 shuffledOptions.forEach(option => {
                     htmlString += `<button class="option-button" data-brand="${option}">${option}</button>`;
                 });
                 optionsEl.innerHTML = htmlString;
                 
-                // Reset round state
                 roundAnswered = false;
                 nextBtn.disabled = true;
+                nextRoundPoints = 1;
                 
-                // Attach click handlers
                 document.querySelectorAll('.option-button').forEach(btn => {
                     btn.addEventListener('click', (e) => handleSelection(e, currentQuiz.brand));
                 });
             }
             
-            // Handle answer selection
             function handleSelection(event, correctBrand) {
                 if (roundAnswered || gameFinished) return;
                 
@@ -594,15 +706,12 @@
                 
                 roundAnswered = true;
                 
-                // Disable all options
                 document.querySelectorAll('.option-button').forEach(btn => {
                     btn.disabled = true;
                 });
                 
-                // Check if correct
                 const isAnswerCorrect = (selectedBrand === correctBrand);
                 
-                // Mark correct and wrong
                 document.querySelectorAll('.option-button').forEach(btn => {
                     if (btn.dataset.brand === correctBrand) {
                         btn.classList.add('correct');
@@ -611,10 +720,16 @@
                     }
                 });
                 
-                // Update score and feedback
                 if (isAnswerCorrect) {
-                    playerScore++;
-                    feedbackEl.textContent = '✅ CORRECT! Well done!';
+                    const pointsEarned = nextRoundPoints;
+                    playerScore += pointsEarned;
+                    
+                    if (pointsEarned > 1) {
+                        feedbackEl.textContent = `✅ CORRECT! +${pointsEarned} points (doubled!)`;
+                    } else {
+                        feedbackEl.textContent = '✅ CORRECT! Well done!';
+                    }
+                    
                     feedbackEl.style.color = '#a5d6a5';
                 } else {
                     feedbackEl.textContent = `❌ Incorrect. The answer is ${correctBrand}`;
@@ -622,12 +737,9 @@
                 }
                 
                 scoreEl.textContent = playerScore;
-                
-                // Enable next button
                 nextBtn.disabled = false;
             }
             
-            // Move to next round
             function advanceRound() {
                 if (gameFinished) return;
                 
@@ -637,51 +749,79 @@
                 feedbackEl.style.color = '#eef2f6';
             }
             
-            // Restart game
             function restartGame() {
                 currentIndex = 0;
                 playerScore = 0;
                 gameFinished = false;
                 roundAnswered = false;
-                conversionSent = false; // Reset for new game
+                conversionSent = false;
+                nextRoundPoints = 1;
                 
                 scoreEl.textContent = '0';
-                statusEl.textContent = '';
                 
-                // Shuffle quiz order for variety
                 shuffleArray(quizData);
-                
                 loadRound(0);
                 feedbackEl.textContent = '🎮 choose an answer to begin';
                 feedbackEl.style.color = '#eef2f6';
             }
             
-            // Event listeners
+            // ====================================================
+            // AD BUTTON HANDLERS - Buttons are ALWAYS enabled
+            // ====================================================
+            
+            hintAdBtn.addEventListener('click', () => {
+                if (gameFinished || roundAnswered) {
+                    alert('You cannot use hints now. Start a new game!');
+                    return;
+                }
+                
+                showAd(() => {
+                    const firstLetter = currentCorrectBrand[0];
+                    feedbackEl.textContent = `🔍 HINT: The brand starts with "${firstLetter}"`;
+                    feedbackEl.style.color = '#f4a261';
+                }, 'hint');
+            });
+            
+            bonusAdBtn.addEventListener('click', () => {
+                if (gameFinished) {
+                    alert('Game is finished. Start a new game!');
+                    return;
+                }
+                
+                showAd(() => {
+                    nextRoundPoints = 2;
+                    feedbackEl.textContent = '⭐ BONUS ACTIVATED! Next correct answer gives DOUBLE points!';
+                    feedbackEl.style.color = '#f4a261';
+                }, 'bonus');
+            });
+            
+            skipAdBtn.addEventListener('click', () => {
+                if (gameFinished || roundAnswered) {
+                    alert('You cannot skip now. Start a new game!');
+                    return;
+                }
+                
+                showAd(() => {
+                    document.querySelectorAll('.option-button').forEach(btn => {
+                        if (btn.dataset.brand === currentCorrectBrand) {
+                            btn.click();
+                        }
+                    });
+                }, 'skip');
+            });
+            
             nextBtn.addEventListener('click', advanceRound);
             restartBtn.addEventListener('click', restartGame);
             
-            // Telegram Mini App initialization
             if (window.Telegram?.WebApp) {
                 window.Telegram.WebApp.ready();
                 window.Telegram.WebApp.expand();
-                
-                // Set theme colors if needed
-                document.documentElement.style.setProperty('--tg-theme-bg-color', window.Telegram.WebApp.backgroundColor);
+                console.log('✅ Telegram WebApp initialized');
             }
             
-            // Start the game
             restartGame();
+            document.getElementById('policyLink').href = '#'; // Replace with your actual privacy URL
             
-            // Optional: send conversion after 30 seconds of engagement
-            setTimeout(() => {
-                if (!conversionSent && trackingParam && !gameFinished) {
-                    // User engaged but didn't finish - uncomment if desired
-                    // sendConversion();
-                }
-            }, 30000);
-            
-            // Update privacy link - REPLACE WITH YOUR ACTUAL PRIVACY PAGE
-            document.getElementById('policyLink').href = '#'; // Change to your real URL
         })();
     </script>
 </body>

@@ -1,29 +1,28 @@
-     <!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brand Trivia · Telegram Mini App</title>
     
-    <!-- Telegram Web App Script -->
+    <!-- Telegram Web App Script (required) -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     
-    <!-- Adexium Push-like Ad Script (initialized immediately) -->
+    <!-- Adexium Interstitial Ad Script -->
     <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
     <script type="text/javascript">
-        // Create widget and store globally
-        window.adexiumWidget = new AdexiumWidget({
-            wid: '2ef254d8-d5e4-4479-a85f-bc19348d2c56',
-            adFormat: 'push-like'
+        // Initialize the interstitial ad widget and make it globally accessible
+        document.addEventListener('DOMContentLoaded', () => {
+            window.adexiumWidget = new AdexiumWidget({
+                wid: '2ef254d8-d5e4-4479-a85f-bc19348d2c56',
+                adFormat: 'interstitial'
+            });
+            window.adexiumWidget.autoMode(); // Enables automatic ad display if needed, but we'll also use show()
         });
-        window.adexiumWidget.autoMode();
-        
-        // Optional: Log available methods for debugging (remove in production)
-        console.log('Adexium widget methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(window.adexiumWidget)));
     </script>
     
     <style>
-        /* (keep all your existing styles – same as before) */
+        /* (keep all your existing styles) */
         * {
             margin: 0;
             padding: 0;
@@ -413,18 +412,18 @@
             // ====================================================
             // ADEXIUM WIDGET ACCESS
             // ====================================================
-            const widget = window.adexiumWidget;
+            const widget = window.adexiumWidget; // set in the head script
             let pendingReward = null;
             let adTimeout = null;
             
-            // Try to set up event listener for ad completion
+            // Set up event listeners for ad completion (common event names)
             if (widget) {
-                // Common event names to try
-                const possibleEvents = ['adCompleted', 'onAdCompleted', 'close', 'onClose', 'finished'];
-                possibleEvents.forEach(eventName => {
+                // Try multiple event names
+                const eventNames = ['adCompleted', 'onAdCompleted', 'close', 'onClose', 'finished'];
+                eventNames.forEach(ev => {
                     if (typeof widget.on === 'function') {
-                        widget.on(eventName, () => {
-                            console.log(`Ad event: ${eventName}`);
+                        widget.on(ev, () => {
+                            console.log(`Ad event: ${ev}`);
                             if (pendingReward) {
                                 pendingReward();
                                 pendingReward = null;
@@ -434,8 +433,8 @@
                             }
                         });
                     } else if (widget.addEventListener) {
-                        widget.addEventListener(eventName, () => {
-                            console.log(`Ad event: ${eventName}`);
+                        widget.addEventListener(ev, () => {
+                            console.log(`Ad event: ${ev}`);
                             if (pendingReward) {
                                 pendingReward();
                                 pendingReward = null;
@@ -605,7 +604,7 @@
             }
             
             // ====================================================
-            // AD BUTTON HANDLERS (with Adexium)
+            // AD BUTTON HANDLERS (with Adexium interstitial)
             // ====================================================
             
             function requestAd(rewardCallback) {
@@ -621,19 +620,18 @@
                 }
                 
                 pendingReward = rewardCallback;
-                feedbackEl.textContent = '⏳ Requesting ad...';
+                feedbackEl.textContent = '⏳ Loading ad...';
                 
-                // Try to call show() if available
+                // Call show() on the widget (interstitial format should have this)
                 if (typeof widget.show === 'function') {
                     widget.show().catch(err => {
                         console.error('show() failed:', err);
-                        // fallback to waiting for autoMode
+                        feedbackEl.textContent = '❌ Ad failed. Try again.';
+                        pendingReward = null;
                     });
-                } else if (typeof widget.request === 'function') {
-                    widget.request();
                 } else {
-                    // No manual trigger, just rely on autoMode
-                    console.log('No manual trigger method; waiting for autoMode...');
+                    // Fallback: maybe it's autoMode only, but we'll still wait
+                    console.warn('No show() method; relying on autoMode.');
                 }
                 
                 // Set a timeout to avoid infinite waiting
@@ -696,6 +694,4 @@
         })();
     </script>
 </body>
-</html>                                           const feedbackEl = document.getElementById('feedbackMessage');
-                                       
-
+</html>                                           

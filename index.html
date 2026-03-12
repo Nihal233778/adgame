@@ -1,17 +1,18 @@
-     <!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brand Trivia · Telegram Mini App</title>
     
-    <!-- ✅ TELEGRAM WEB APP SCRIPT -->
+    <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     
-    <!-- ✅ ADEXIUM AD SCRIPT - This loads the actual ads -->
+    <!-- Adexium Ad Script -->
     <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
     
     <style>
+        /* (keep your existing styles) */
         * {
             margin: 0;
             padding: 0;
@@ -241,7 +242,6 @@
             text-align: center;
         }
         
-        /* AD BUTTONS */
         .ad-buttons-section {
             margin: 20px 0;
             display: flex;
@@ -409,7 +409,7 @@
             
             <div id="feedbackMessage" class="message-container">🎮 choose an answer to begin</div>
             
-            <!-- ADEXIUM AD BUTTONS -->
+            <!-- AD BUTTONS -->
             <div class="ad-label">🎬 WATCH ADS FOR BONUSES</div>
             <div class="ad-buttons-section">
                 <button class="ad-button" id="watchAdForHintBtn">
@@ -441,10 +441,11 @@
     <script>
         (function() {
             // ====================================================
-            // ADEXIUM CONFIGURATION - USING YOUR ORIGINAL CODE
+            // ADEXIUM CONFIGURATION
             // ====================================================
             const ADEXIUM_WIDGET_ID = '2ef254d8-d5e4-4479-a85f-bc19348d2c56';
             let adexiumWidget = null;
+            let pendingReward = null; // stores the reward function to execute after ad
             
             // ====================================================
             // PARAMETER EXTRACTION
@@ -457,97 +458,87 @@
                     if (window.Telegram?.WebApp?.initDataUnsafe?.start_param) {
                         const startParam = window.Telegram.WebApp.initDataUnsafe.start_param;
                         console.log('Telegram start_param:', startParam);
-                        
                         if (startParam) {
                             trackingParam = startParam;
                             return;
                         }
                     }
-                    
                     const urlParams = new URLSearchParams(window.location.search);
                     const tgWebAppData = urlParams.get('tgWebAppData');
-                    
                     if (tgWebAppData) {
                         const params = new URLSearchParams(tgWebAppData);
                         const startParam = params.get('start_param');
-                        
                         if (startParam) {
                             trackingParam = startParam;
                             return;
                         }
                     }
-                    
                     console.log('No tracking parameter found - running in test mode');
                 } catch (e) {
                     console.error('Error extracting parameter:', e);
                 }
             }
-            
             extractTrackingParameter();
             
             const paramDisplay = document.getElementById('paramDisplay');
             if (paramDisplay) {
                 if (trackingParam) {
-                    const shortParam = trackingParam.length > 12 
-                        ? trackingParam.substring(0, 10) + '...' 
-                        : trackingParam;
+                    const shortParam = trackingParam.length > 12 ? trackingParam.substring(0, 10) + '...' : trackingParam;
                     paramDisplay.textContent = `param: ${shortParam}`;
                 } else {
                     paramDisplay.textContent = '⚡ test mode';
                 }
             }
             
-            // ====================================================
-            // ADEXIUM CONVERSION TRACKING
-            // ====================================================
             function sendConversion() {
                 if (!trackingParam) {
-                    console.log('No tracking parameter - test mode');
                     document.getElementById('conversionStatus').textContent = '🧪 test mode (no tracking)';
                     return false;
                 }
-                
-                if (conversionSent) {
-                    console.log('Conversion already sent');
-                    return false;
-                }
-                
+                if (conversionSent) return false;
                 const conversionUrl = `https://adexium.io/conversion?click_id=${encodeURIComponent(trackingParam)}`;
-                
                 if (navigator.sendBeacon) {
                     const success = navigator.sendBeacon(conversionUrl);
                     if (success) {
-                        console.log('✅ Adexium conversion sent');
                         conversionSent = true;
                         document.getElementById('conversionStatus').textContent = '✓ conversion sent';
                         return true;
                     }
                 }
-                
-                fetch(conversionUrl, {
-                    method: 'GET',
-                    mode: 'no-cors',
-                    keepalive: true
-                }).then(() => {
-                    console.log('✅ Adexium conversion sent');
-                    conversionSent = true;
-                    document.getElementById('conversionStatus').textContent = '✓ conversion sent';
-                }).catch(err => {
-                    console.error('❌ Failed to send conversion:', err);
-                    document.getElementById('conversionStatus').textContent = '✗ conversion failed';
-                });
-                
+                fetch(conversionUrl, { method: 'GET', mode: 'no-cors', keepalive: true })
+                    .then(() => {
+                        conversionSent = true;
+                        document.getElementById('conversionStatus').textContent = '✓ conversion sent';
+                    })
+                    .catch(err => {
+                        document.getElementById('conversionStatus').textContent = '✗ conversion failed';
+                    });
                 return true;
             }
             
             // ====================================================
-            // INITIALIZE ADEXIUM WIDGET - EXACTLY AS YOUR ORIGINAL
+            // INITIALIZE ADEXIUM WIDGET WITH EVENT LISTENERS
             // ====================================================
             document.addEventListener('DOMContentLoaded', () => {
                 try {
                     adexiumWidget = new AdexiumWidget({
-                        wid: ADEXIUM_WIDGET_ID, 
-                        adFormat: 'interstitial'
+                        wid: ADEXIUM_WIDGET_ID,
+                        adFormat: 'interstitial',
+                        onAdCompleted: () => {
+                            console.log('✅ Adexium ad completed');
+                            document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
+                            // Give the pending reward if any
+                            if (pendingReward) {
+                                pendingReward();
+                                pendingReward = null;
+                            }
+                            sendConversion();
+                        },
+                        onAdError: (error) => {
+                            console.error('❌ Adexium ad error:', error);
+                            document.getElementById('feedbackMessage').textContent = '❌ Ad failed. Try again?';
+                            pendingReward = null; // clear pending reward
+                        }
                     });
                     
                     if (adexiumWidget && adexiumWidget.autoMode) {
@@ -562,52 +553,32 @@
             });
             
             // ====================================================
-            // SHOW ADEXIUM AD - USING THE WIDGET'S SHOW METHOD
+            // REQUEST AD (if possible) AND SET PENDING REWARD
             // ====================================================
-            function showAdexiumAd(callback, adType) {
+            function requestAd(rewardCallback) {
                 if (!adexiumWidget) {
                     alert('⏳ Ads are still loading. Please wait a moment.');
                     return;
                 }
                 
-                document.getElementById('feedbackMessage').textContent = '⏳ Loading ad...';
+                // If the widget has a method to request an ad, call it.
+                // Otherwise, we rely on autoMode to show ads periodically.
+                // We'll set the pending reward and inform the user.
+                pendingReward = rewardCallback;
+                document.getElementById('feedbackMessage').textContent = '⏳ Please wait for the ad to appear...';
                 
-                // Try to show ad using the widget
-                if (adexiumWidget.show) {
-                    adexiumWidget.show()
-                        .then(() => {
-                            console.log(`✅ ${adType} ad completed`);
-                            document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
-                            
-                            if (callback) {
-                                callback();
-                            }
-                            
-                            sendConversion();
-                        })
-                        .catch((error) => {
-                            console.error(`❌ ${adType} ad failed:`, error);
-                            document.getElementById('feedbackMessage').textContent = '❌ Ad failed. Try again?';
-                            alert('Ad could not be shown. Please try again.');
-                        });
+                // Try to trigger an ad if the widget has a show method (unlikely)
+                if (typeof adexiumWidget.show === 'function') {
+                    adexiumWidget.show().catch(() => {});
                 } else {
-                    // Fallback to autoMode if show method doesn't exist
-                    alert('Please wait for ad to appear automatically');
-                    document.getElementById('feedbackMessage').textContent = '⏳ Waiting for ad...';
-                    
-                    // Simulate ad completion after a delay
-                    setTimeout(() => {
-                        if (callback) {
-                            callback();
-                        }
-                        document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
-                        sendConversion();
-                    }, 3000);
+                    // If no show method, we just wait for autoMode to trigger an ad.
+                    // Show a non-intrusive hint.
+                    console.log('Waiting for autoMode ad...');
                 }
             }
             
             // ====================================================
-            // GAME DATA
+            // GAME DATA AND LOGIC (same as before)
             // ====================================================
             const quizData = [
                 { brand: "Nike", slogan: "Just Do It", options: ["Nike", "Adidas", "Puma", "Reebok"] },
@@ -620,7 +591,6 @@
                 { brand: "Tesla", slogan: "Accelerate the World", options: ["Tesla", "Toyota", "Ford", "BMW"] }
             ];
             
-            // Game state
             let currentIndex = 0;
             let playerScore = 0;
             let roundAnswered = false;
@@ -628,7 +598,6 @@
             let currentCorrectBrand = "";
             let nextRoundPoints = 1;
             
-            // DOM elements
             const sloganEl = document.getElementById('sloganDisplay');
             const hintEl = document.getElementById('hintDisplay');
             const optionsEl = document.getElementById('optionsGrid');
@@ -637,8 +606,6 @@
             const roundEl = document.getElementById('roundValue');
             const nextBtn = document.getElementById('nextButton');
             const restartBtn = document.getElementById('restartButton');
-            
-            // Ad buttons
             const hintAdBtn = document.getElementById('watchAdForHintBtn');
             const bonusAdBtn = document.getElementById('watchAdForBonusBtn');
             const skipAdBtn = document.getElementById('watchAdForSkipBtn');
@@ -656,7 +623,6 @@
                     gameFinished = true;
                     sloganEl.textContent = "🎉 GAME COMPLETE!";
                     hintEl.textContent = `final score: ${playerScore}/${quizData.length}`;
-                    
                     optionsEl.innerHTML = `
                         <div style="grid-column: span 2; text-align: center; padding: 30px; background: rgba(92,140,255,0.1); border-radius: 20px;">
                             <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
@@ -664,13 +630,8 @@
                             <div style="margin-top: 15px; opacity: 0.7;">thanks for playing!</div>
                         </div>
                     `;
-                    
                     nextBtn.disabled = true;
-                    
-                    if (!conversionSent) {
-                        sendConversion();
-                    }
-                    
+                    if (!conversionSent) sendConversion();
                     return;
                 }
                 
@@ -681,7 +642,6 @@
                 roundEl.textContent = `${index + 1}/${quizData.length}`;
                 
                 const shuffledOptions = shuffleArray([...currentQuiz.options]);
-                
                 let htmlString = '';
                 shuffledOptions.forEach(option => {
                     htmlString += `<button class="option-button" data-brand="${option}">${option}</button>`;
@@ -704,31 +664,19 @@
                 const selectedBrand = selectedBtn.dataset.brand;
                 
                 roundAnswered = true;
-                
-                document.querySelectorAll('.option-button').forEach(btn => {
-                    btn.disabled = true;
-                });
+                document.querySelectorAll('.option-button').forEach(btn => btn.disabled = true);
                 
                 const isAnswerCorrect = (selectedBrand === correctBrand);
                 
                 document.querySelectorAll('.option-button').forEach(btn => {
-                    if (btn.dataset.brand === correctBrand) {
-                        btn.classList.add('correct');
-                    } else if (btn === selectedBtn && !isAnswerCorrect) {
-                        btn.classList.add('wrong');
-                    }
+                    if (btn.dataset.brand === correctBrand) btn.classList.add('correct');
+                    else if (btn === selectedBtn && !isAnswerCorrect) btn.classList.add('wrong');
                 });
                 
                 if (isAnswerCorrect) {
                     const pointsEarned = nextRoundPoints;
                     playerScore += pointsEarned;
-                    
-                    if (pointsEarned > 1) {
-                        feedbackEl.textContent = `✅ CORRECT! +${pointsEarned} points (doubled!)`;
-                    } else {
-                        feedbackEl.textContent = '✅ CORRECT! Well done!';
-                    }
-                    
+                    feedbackEl.textContent = pointsEarned > 1 ? `✅ CORRECT! +${pointsEarned} points (doubled!)` : '✅ CORRECT! Well done!';
                     feedbackEl.style.color = '#a5d6a5';
                 } else {
                     feedbackEl.textContent = `❌ Incorrect. The answer is ${correctBrand}`;
@@ -741,7 +689,6 @@
             
             function advanceRound() {
                 if (gameFinished) return;
-                
                 currentIndex++;
                 loadRound(currentIndex);
                 feedbackEl.textContent = '🎯 choose your answer';
@@ -755,9 +702,7 @@
                 roundAnswered = false;
                 conversionSent = false;
                 nextRoundPoints = 1;
-                
                 scoreEl.textContent = '0';
-                
                 shuffleArray(quizData);
                 loadRound(0);
                 feedbackEl.textContent = '🎮 choose an answer to begin';
@@ -765,7 +710,7 @@
             }
             
             // ====================================================
-            // AD BUTTON HANDLERS - Using real Adexium ads
+            // AD BUTTON HANDLERS
             // ====================================================
             
             hintAdBtn.addEventListener('click', () => {
@@ -773,12 +718,11 @@
                     alert('You cannot use hints now. Start a new game!');
                     return;
                 }
-                
-                showAdexiumAd(() => {
+                requestAd(() => {
                     const firstLetter = currentCorrectBrand[0];
                     feedbackEl.textContent = `🔍 HINT: The brand starts with "${firstLetter}"`;
                     feedbackEl.style.color = '#f4a261';
-                }, 'hint');
+                });
             });
             
             bonusAdBtn.addEventListener('click', () => {
@@ -786,12 +730,11 @@
                     alert('Game is finished. Start a new game!');
                     return;
                 }
-                
-                showAdexiumAd(() => {
+                requestAd(() => {
                     nextRoundPoints = 2;
                     feedbackEl.textContent = '⭐ BONUS ACTIVATED! Next correct answer gives DOUBLE points!';
                     feedbackEl.style.color = '#f4a261';
-                }, 'bonus');
+                });
             });
             
             skipAdBtn.addEventListener('click', () => {
@@ -799,14 +742,11 @@
                     alert('You cannot skip now. Start a new game!');
                     return;
                 }
-                
-                showAdexiumAd(() => {
+                requestAd(() => {
                     document.querySelectorAll('.option-button').forEach(btn => {
-                        if (btn.dataset.brand === currentCorrectBrand) {
-                            btn.click();
-                        }
+                        if (btn.dataset.brand === currentCorrectBrand) btn.click();
                     });
-                }, 'skip');
+                });
             });
             
             nextBtn.addEventListener('click', advanceRound);
@@ -820,11 +760,8 @@
             
             restartGame();
             document.getElementById('policyLink').href = '#'; // Replace with your actual privacy URL
-            
         })();
     </script>
 </body>
-</html>               
-        .                                                        
-            
-            
+</html>                                                                             
+                    

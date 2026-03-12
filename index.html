@@ -5,30 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brand Trivia · Telegram Mini App</title>
     
-    <!-- Telegram Web App Script (required) -->
+  
+     
+    <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     
     <!-- Adexium Ad Script -->
     <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
     <script type="text/javascript">
-        // Initialize the Adexium widget and make it globally available
+        // Initialize widget and expose it globally
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 window.adexiumWidget = new AdexiumWidget({
                     wid: '2ef254d8-d5e4-4479-a85f-bc19348d2c56',
-                    adFormat: 'interstitial' // Change to 'rewarded' if you have that format
+                    adFormat: 'interstitial'
                 });
-                // Enable auto mode (ads will appear automatically)
                 if (window.adexiumWidget.autoMode) {
                     window.adexiumWidget.autoMode();
                 }
-                console.log('✅ Adexium widget initialized');
+                // Log all available methods for debugging
+                console.log('Adexium widget methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(window.adexiumWidget)));
+                console.log('Adexium widget own properties:', Object.keys(window.adexiumWidget));
             } catch (e) {
-                console.error('❌ Adexium initialization failed:', e);
+                console.error('Adexium init error:', e);
             }
         });
     </script>
-    
     <style>
         /* (all your existing styles – keep them) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -483,3 +485,4 @@
                                     
             
             
+

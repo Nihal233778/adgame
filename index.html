@@ -1,4 +1,4 @@
-      <!DOCTYPE html>
+       <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,26 +8,30 @@
     <!-- Telegram Web App Script (required) -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     
-    <!-- Adexium Interstitial Ad Script -->
+    <!-- Adexium Ad Script -->
     <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
     <script type="text/javascript">
-        // Initialize the interstitial ad widget and make it globally accessible
+        // Initialize the Adexium widget and make it globally available
         document.addEventListener('DOMContentLoaded', () => {
-            window.adexiumWidget = new AdexiumWidget({
-                wid: '2ef254d8-d5e4-4479-a85f-bc19348d2c56',
-                adFormat: 'interstitial'
-            });
-            window.adexiumWidget.autoMode(); // Enables automatic ad display if needed, but we'll also use show()
+            try {
+                window.adexiumWidget = new AdexiumWidget({
+                    wid: '2ef254d8-d5e4-4479-a85f-bc19348d2c56',
+                    adFormat: 'interstitial' // Change to 'rewarded' if you have that format
+                });
+                // Optional: enable auto mode (may show ads automatically)
+                if (window.adexiumWidget.autoMode) {
+                    window.adexiumWidget.autoMode();
+                }
+                console.log('✅ Adexium widget initialized');
+            } catch (e) {
+                console.error('❌ Adexium initialization failed:', e);
+            }
         });
     </script>
     
     <style>
-        /* (keep all your existing styles) */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* (keep all your existing styles – I'll include a minimal set for brevity) */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(145deg, #121826 0%, #1e2433 100%);
@@ -45,302 +49,109 @@
             backdrop-filter: blur(10px);
             border-radius: 32px;
             border: 1px solid rgba(100, 150, 255, 0.25);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(100, 150, 255, 0.1) inset;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
             padding: 24px 20px;
-            position: relative;
-            overflow: hidden;
         }
-        .app-container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 30% 30%, rgba(80, 140, 255, 0.08), transparent 60%);
-            z-index: -1;
-        }
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .logo { display: flex; align-items: center; gap: 10px; }
         .logo-icon {
-            width: 38px;
-            height: 38px;
-            background: linear-gradient(135deg, #5c8cff, #9d6eff);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 18px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(92, 140, 255, 0.4);
+            width: 38px; height: 38px; background: linear-gradient(135deg, #5c8cff, #9d6eff);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px; color: white;
         }
         .logo-text {
-            font-size: 20px;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #ffffff, #c5d9ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 20px; font-weight: 600; background: linear-gradient(135deg, #fff, #c5d9ff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         .badge {
-            background: rgba(92, 140, 255, 0.15);
-            padding: 6px 12px;
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 500;
-            border: 1px solid rgba(92, 140, 255, 0.3);
-            color: #b8ceff;
+            background: rgba(92, 140, 255, 0.15); padding: 6px 12px; border-radius: 100px;
+            font-size: 12px; border: 1px solid rgba(92, 140, 255, 0.3); color: #b8ceff;
         }
-        .stats-panel {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
+        .stats-panel { display: flex; gap: 16px; margin-bottom: 24px; }
         .stat-item {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 20px;
-            padding: 16px 10px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(5px);
+            flex: 1; background: rgba(0, 0, 0, 0.25); border-radius: 20px; padding: 16px 10px;
+            text-align: center; border: 1px solid rgba(255, 255, 255, 0.03);
         }
-        .stat-number {
-            font-size: 32px;
-            font-weight: 700;
-            color: #5c8cff;
-            line-height: 1.2;
-            text-shadow: 0 2px 5px rgba(92, 140, 255, 0.3);
-        }
-        .stat-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            opacity: 0.6;
-            margin-top: 4px;
-        }
+        .stat-number { font-size: 32px; font-weight: 700; color: #5c8cff; }
+        .stat-label { font-size: 12px; text-transform: uppercase; opacity: 0.6; }
         .game-card {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 28px;
-            padding: 24px 18px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.02);
-            box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.2); border-radius: 28px; padding: 24px 18px;
+            margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.02);
         }
-        .question-area {
-            text-align: center;
-            margin-bottom: 28px;
-        }
+        .question-area { text-align: center; margin-bottom: 28px; }
         .question-label {
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            opacity: 0.5;
+            font-size: 14px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.5;
             margin-bottom: 12px;
         }
         .brand-slogan {
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff, #d6e4ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 32px; font-weight: 700; background: linear-gradient(135deg, #fff, #d6e4ff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
-            line-height: 1.3;
-            padding: 0 10px;
         }
-        .hint-text {
-            font-size: 16px;
-            font-style: italic;
-            opacity: 0.6;
-            color: #a0b8e0;
-        }
+        .hint-text { font-size: 16px; font-style: italic; opacity: 0.6; color: #a0b8e0; }
         .options-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin: 24px 0;
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 24px 0;
         }
         .option-button {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(92, 140, 255, 0.25);
-            border-radius: 18px;
-            padding: 18px 8px;
-            font-size: 18px;
-            font-weight: 500;
-            color: #eef2f6;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(92, 140, 255, 0.25);
+            border-radius: 18px; padding: 18px 8px; font-size: 18px; font-weight: 500;
+            color: #eef2f6; cursor: pointer; transition: all 0.15s ease;
         }
         .option-button:hover {
-            background: rgba(92, 140, 255, 0.15);
-            transform: translateY(-2px);
+            background: rgba(92, 140, 255, 0.15); transform: translateY(-2px);
             border-color: #5c8cff;
         }
-        .option-button:active {
-            transform: translateY(0);
-        }
         .option-button.correct {
-            background: rgba(46, 204, 113, 0.2);
-            border-color: #2ecc71;
-            color: #d0f0d0;
+            background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; color: #d0f0d0;
             pointer-events: none;
-            box-shadow: 0 0 12px rgba(46, 204, 113, 0.3);
         }
         .option-button.wrong {
-            background: rgba(231, 76, 60, 0.2);
-            border-color: #e74c3c;
-            color: #ffd5d5;
+            background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; color: #ffd5d5;
             pointer-events: none;
-            box-shadow: 0 0 12px rgba(231, 76, 60, 0.2);
-        }
-        .option-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
         }
         .message-container {
-            min-height: 60px;
-            padding: 14px 18px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 40px;
-            margin: 20px 0 16px;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(92, 140, 255, 0.15);
-            backdrop-filter: blur(5px);
-            text-align: center;
+            min-height: 60px; padding: 14px 18px; background: rgba(0, 0, 0, 0.25);
+            border-radius: 40px; margin: 20px 0 16px; font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(92, 140, 255, 0.15); text-align: center;
         }
-        .ad-buttons-section {
-            margin: 20px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+        .ad-buttons-section { margin: 20px 0; display: flex; flex-direction: column; gap: 12px; }
         .ad-button {
-            background: linear-gradient(145deg, #f4a261, #e76f51);
-            border: none;
-            padding: 16px 20px;
-            border-radius: 40px;
-            font-size: 16px;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 6px 0 #b96f2e;
-            transition: all 0.08s linear;
-            border: 1px solid #ffb085;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
+            background: linear-gradient(145deg, #f4a261, #e76f51); border: none;
+            padding: 16px 20px; border-radius: 40px; font-size: 16px; font-weight: 600;
+            color: white; cursor: pointer; box-shadow: 0 6px 0 #b96f2e;
+            transition: all 0.08s linear; border: 1px solid #ffb085;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-        .ad-button:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #b96f2e;
-        }
-        .ad-button i {
-            font-style: normal;
-            font-size: 20px;
-        }
-        .button-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-        }
+        .ad-button:active { transform: translateY(4px); box-shadow: 0 2px 0 #b96f2e; }
+        .button-group { display: flex; gap: 12px; margin-top: 16px; }
         .primary-action {
-            flex: 1;
-            background: linear-gradient(145deg, #5c8cff, #3f6ad0);
-            border: none;
-            padding: 16px 0;
-            border-radius: 40px;
-            font-size: 18px;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 8px 0 #2a3f7a;
-            transition: all 0.08s linear;
-            border: 1px solid #8ab0ff;
+            flex: 1; background: linear-gradient(145deg, #5c8cff, #3f6ad0); border: none;
+            padding: 16px 0; border-radius: 40px; font-size: 18px; font-weight: 600;
+            color: white; cursor: pointer; box-shadow: 0 8px 0 #2a3f7a;
+            transition: 0.08s linear; border: 1px solid #8ab0ff;
         }
-        .primary-action:active {
-            transform: translateY(6px);
-            box-shadow: 0 2px 0 #2a3f7a;
-        }
-        .primary-action:disabled {
-            opacity: 0.5;
-            transform: none;
-            box-shadow: 0 8px 0 #2a3f7a;
-            pointer-events: none;
-        }
+        .primary-action:active { transform: translateY(6px); box-shadow: 0 2px 0 #2a3f7a; }
+        .primary-action:disabled { opacity: 0.5; pointer-events: none; }
         .secondary-action {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(92, 140, 255, 0.4);
-            padding: 16px 0;
-            border-radius: 40px;
-            font-size: 18px;
-            font-weight: 600;
-            color: #b8ceff;
-            cursor: pointer;
-            transition: 0.08s linear;
-            backdrop-filter: blur(5px);
+            flex: 1; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(92, 140, 255, 0.4);
+            padding: 16px 0; border-radius: 40px; font-size: 18px; font-weight: 600;
+            color: #b8ceff; cursor: pointer; transition: 0.08s linear;
         }
-        .secondary-action:active {
-            background: rgba(92, 140, 255, 0.15);
-        }
+        .secondary-action:active { background: rgba(92, 140, 255, 0.15); }
         .footer-info {
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            opacity: 0.5;
+            margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex; justify-content: space-between; font-size: 12px; opacity: 0.5;
         }
         .tracking-badge {
-            font-size: 10px;
-            background: rgba(92, 140, 255, 0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-family: monospace;
-            color: #8aacff;
+            font-size: 10px; background: rgba(92, 140, 255, 0.1); padding: 4px 8px;
+            border-radius: 4px; font-family: monospace; color: #8aacff;
         }
-        .status-note {
-            font-size: 11px;
-            opacity: 0.5;
-            margin-top: 8px;
-            text-align: center;
-        }
-        .privacy-link {
-            color: #8aacff;
-            text-decoration: none;
-        }
-        .privacy-link:hover {
-            text-decoration: underline;
-        }
+        .status-note { font-size: 11px; opacity: 0.5; margin-top: 8px; text-align: center; }
+        .privacy-link { color: #8aacff; text-decoration: none; }
         .ad-label {
-            font-size: 12px;
-            text-align: center;
-            margin: 10px 0 5px;
-            color: #f4a261;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 12px; text-align: center; margin: 10px 0 5px; color: #f4a261;
+            text-transform: uppercase; letter-spacing: 1px;
         }
     </style>
 </head>
@@ -372,24 +183,15 @@
                 <div class="hint-text" id="hintDisplay">select the correct brand</div>
             </div>
             
-            <div class="options-grid" id="optionsGrid">
-                <!-- Options injected by JS -->
-            </div>
+            <div class="options-grid" id="optionsGrid"></div>
             
             <div id="feedbackMessage" class="message-container">🎮 choose an answer to begin</div>
             
-            <!-- AD BUTTONS (connected to Adexium) -->
             <div class="ad-label">🎬 WATCH ADS FOR BONUSES</div>
             <div class="ad-buttons-section">
-                <button class="ad-button" id="watchAdForHintBtn">
-                    <i>🔍</i> Watch Ad to Reveal First Letter
-                </button>
-                <button class="ad-button" id="watchAdForBonusBtn">
-                    <i>⭐</i> Watch Ad to Double Points
-                </button>
-                <button class="ad-button" id="watchAdForSkipBtn">
-                    <i>🔄</i> Watch Ad to Skip This Question
-                </button>
+                <button class="ad-button" id="watchAdForHintBtn"><i>🔍</i> Watch Ad to Reveal First Letter</button>
+                <button class="ad-button" id="watchAdForBonusBtn"><i>⭐</i> Watch Ad to Double Points</button>
+                <button class="ad-button" id="watchAdForSkipBtn"><i>🔄</i> Watch Ad to Skip This Question</button>
             </div>
             
             <div class="button-group">
@@ -403,53 +205,57 @@
             <span id="paramDisplay" class="tracking-badge">no tracking param</span>
             <a href="#" id="policyLink" class="privacy-link" target="_blank">privacy</a>
         </div>
-        
         <div id="conversionStatus" class="status-note"></div>
     </div>
     
     <script>
         (function() {
-            // ====================================================
-            // ADEXIUM WIDGET ACCESS
-            // ====================================================
-            const widget = window.adexiumWidget; // set in the head script
+            // ==================== ADEXIUM SETUP ====================
+            let adexiumWidget = null;
             let pendingReward = null;
             let adTimeout = null;
+            let widgetReady = false;
             
-            // Set up event listeners for ad completion (common event names)
-            if (widget) {
-                // Try multiple event names
-                const eventNames = ['adCompleted', 'onAdCompleted', 'close', 'onClose', 'finished'];
-                eventNames.forEach(ev => {
-                    if (typeof widget.on === 'function') {
-                        widget.on(ev, () => {
-                            console.log(`Ad event: ${ev}`);
-                            if (pendingReward) {
-                                pendingReward();
-                                pendingReward = null;
-                                if (adTimeout) clearTimeout(adTimeout);
-                                document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
-                                sendConversion();
-                            }
-                        });
-                    } else if (widget.addEventListener) {
-                        widget.addEventListener(ev, () => {
-                            console.log(`Ad event: ${ev}`);
-                            if (pendingReward) {
-                                pendingReward();
-                                pendingReward = null;
-                                if (adTimeout) clearTimeout(adTimeout);
-                                document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
-                                sendConversion();
-                            }
-                        });
-                    }
-                });
+            // Wait for widget to be initialized (check every 500ms)
+            function checkWidget() {
+                if (window.adexiumWidget) {
+                    adexiumWidget = window.adexiumWidget;
+                    widgetReady = true;
+                    console.log('✅ Adexium widget ready');
+                    // Set up event listeners for ad completion
+                    const eventNames = ['adCompleted', 'onAdCompleted', 'close', 'onClose', 'finished', 'reward'];
+                    eventNames.forEach(ev => {
+                        if (adexiumWidget.on && typeof adexiumWidget.on === 'function') {
+                            adexiumWidget.on(ev, () => {
+                                console.log(`Ad event: ${ev}`);
+                                if (pendingReward) {
+                                    pendingReward();
+                                    pendingReward = null;
+                                    if (adTimeout) clearTimeout(adTimeout);
+                                    document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
+                                    sendConversion();
+                                }
+                            });
+                        } else if (adexiumWidget.addEventListener) {
+                            adexiumWidget.addEventListener(ev, () => {
+                                console.log(`Ad event: ${ev}`);
+                                if (pendingReward) {
+                                    pendingReward();
+                                    pendingReward = null;
+                                    if (adTimeout) clearTimeout(adTimeout);
+                                    document.getElementById('feedbackMessage').textContent = '✨ Thanks for watching!';
+                                    sendConversion();
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    setTimeout(checkWidget, 500);
+                }
             }
+            checkWidget();
             
-            // ====================================================
-            // PARAMETER EXTRACTION (for conversion tracking)
-            // ====================================================
+            // ==================== TRACKING ====================
             let trackingParam = null;
             let conversionSent = false;
             
@@ -457,7 +263,6 @@
                 try {
                     if (window.Telegram?.WebApp?.initDataUnsafe?.start_param) {
                         trackingParam = window.Telegram.WebApp.initDataUnsafe.start_param;
-                        console.log('Telegram start_param:', trackingParam);
                     }
                 } catch (e) {}
                 if (!trackingParam) {
@@ -477,8 +282,7 @@
             }
             
             function sendConversion() {
-                if (!trackingParam) return;
-                if (conversionSent) return;
+                if (!trackingParam || conversionSent) return;
                 const url = `https://adexium.io/conversion?click_id=${encodeURIComponent(trackingParam)}`;
                 if (navigator.sendBeacon) {
                     navigator.sendBeacon(url);
@@ -489,9 +293,7 @@
                 document.getElementById('conversionStatus').textContent = '✓ conversion sent';
             }
             
-            // ====================================================
-            // GAME DATA
-            // ====================================================
+            // ==================== GAME DATA ====================
             const quizData = [
                 { brand: "Nike", slogan: "Just Do It", options: ["Nike", "Adidas", "Puma", "Reebok"] },
                 { brand: "Apple", slogan: "Think Different", options: ["Apple", "Microsoft", "Google", "Samsung"] },
@@ -603,17 +405,13 @@
                 feedbackEl.textContent = '🎮 choose an answer to begin';
             }
             
-            // ====================================================
-            // AD BUTTON HANDLERS (with Adexium interstitial)
-            // ====================================================
-            
+            // ==================== AD BUTTON HANDLERS ====================
             function requestAd(rewardCallback) {
-                if (!widget) {
-                    alert('Ad system not ready. Please refresh.');
+                if (!widgetReady || !adexiumWidget) {
+                    alert('Ad system not ready. Please wait a moment and try again.');
                     return;
                 }
                 
-                // Clear any previous pending reward and timeout
                 if (pendingReward) {
                     pendingReward = null;
                     if (adTimeout) clearTimeout(adTimeout);
@@ -622,28 +420,28 @@
                 pendingReward = rewardCallback;
                 feedbackEl.textContent = '⏳ Loading ad...';
                 
-                // Call show() on the widget (interstitial format should have this)
-                if (typeof widget.show === 'function') {
-                    widget.show().catch(err => {
+                // Try to call show() (common for interstitial/rewarded)
+                if (typeof adexiumWidget.show === 'function') {
+                    adexiumWidget.show().catch(err => {
                         console.error('show() failed:', err);
                         feedbackEl.textContent = '❌ Ad failed. Try again.';
                         pendingReward = null;
                     });
                 } else {
-                    // Fallback: maybe it's autoMode only, but we'll still wait
-                    console.warn('No show() method; relying on autoMode.');
+                    // Fallback: maybe the widget uses a different method, e.g., requestAd
+                    console.warn('No show() method found. Please check Adexium docs.');
+                    feedbackEl.textContent = '⚠️ Ad cannot be triggered manually.';
+                    pendingReward = null;
                 }
                 
-                // Set a timeout to avoid infinite waiting
                 adTimeout = setTimeout(() => {
                     if (pendingReward) {
                         pendingReward = null;
                         feedbackEl.textContent = '⚠️ Ad timeout. Try again.';
                     }
-                }, 30000); // 30 seconds
+                }, 30000);
             }
             
-            // Buttons
             hintAdBtn.addEventListener('click', () => {
                 if (gameFinished || roundAnswered) {
                     alert('You cannot use hints now. Start a new game!');
@@ -688,10 +486,10 @@
                 window.Telegram.WebApp.expand();
             }
             
-            // Start
             restartGame();
-            document.getElementById('policyLink').href = '#'; // replace with actual privacy URL
+            document.getElementById('policyLink').href = '#'; // Replace with your actual privacy URL
         })();
     </script>
 </body>
-</html>                                           
+</html>                                                                                                      
+

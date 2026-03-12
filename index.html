@@ -1,4 +1,4 @@
-       <!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -18,7 +18,7 @@
                     wid: '2ef254d8-d5e4-4479-a85f-bc19348d2c56',
                     adFormat: 'interstitial' // Change to 'rewarded' if you have that format
                 });
-                // Optional: enable auto mode (may show ads automatically)
+                // Enable auto mode (ads will appear automatically)
                 if (window.adexiumWidget.autoMode) {
                     window.adexiumWidget.autoMode();
                 }
@@ -30,7 +30,7 @@
     </script>
     
     <style>
-        /* (keep all your existing styles – I'll include a minimal set for brevity) */
+        /* (all your existing styles – keep them) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -418,22 +418,10 @@
                 }
                 
                 pendingReward = rewardCallback;
-                feedbackEl.textContent = '⏳ Loading ad...';
+                feedbackEl.textContent = '⏳ Please wait for an ad to appear...';
                 
-                // Try to call show() (common for interstitial/rewarded)
-                if (typeof adexiumWidget.show === 'function') {
-                    adexiumWidget.show().catch(err => {
-                        console.error('show() failed:', err);
-                        feedbackEl.textContent = '❌ Ad failed. Try again.';
-                        pendingReward = null;
-                    });
-                } else {
-                    // Fallback: maybe the widget uses a different method, e.g., requestAd
-                    console.warn('No show() method found. Please check Adexium docs.');
-                    feedbackEl.textContent = '⚠️ Ad cannot be triggered manually.';
-                    pendingReward = null;
-                }
-                
+                // Do NOT try to call show() – rely on autoMode to display ads
+                // Set a timeout to avoid infinite waiting
                 adTimeout = setTimeout(() => {
                     if (pendingReward) {
                         pendingReward = null;
@@ -491,5 +479,7 @@
         })();
     </script>
 </body>
-</html>                                                                                                      
-
+</html>                         
+                                    
+            
+            
